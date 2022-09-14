@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  nginx:
+    # build: 
+    #   context: ./nginx
+    #   dockerfile: Dockerfile
+    image: nginx:latest
+    container_name: poc-docker-nginx-server
+    restart: always
+    ports:
+      - 3050:80
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # - ./nginx/html:/usr/share/nginx/html
+    networks:
+      - app-network
+    depends_on:
+      - node-api
+
+  node-api:
+    build:
+      context: ./backend/nodejs
+      dockerfile: Dockerfile
+    image: heliandro/poc-docker-nodejs-api:dev
+    container_name: poc-docker-nodejs-api
+    hostname: node-api
+    tty: true
+    env_file:
+      - ./backend/nodejs/.env.dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./backend/nodejs:/app
+    networks:
+      - app-network
+    depends_on:
+      - mysql-db
+
+  mysql-db:
+    image: mysql:5.7
+    container_name: poc-docker-mysql-db
+    command: --innodb-use-native-aio=0
+    restart: always
+    tty: true
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nodedb
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    ports:
+      - 3306:3306
+    volumes:
+      - ./database/mysql:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
