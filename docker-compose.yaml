@@ -17,6 +17,7 @@ services:
       - app-network
     depends_on:
       - node-api
+      - go-api
 
   node-api:
     build:
@@ -34,6 +35,23 @@ services:
       - 3000:3000
     volumes:
       - ./backend/nodejs:/app
+    networks:
+      - app-network
+    depends_on:
+      - mysql-db
+
+  go-api:
+    build:
+      context: ./backend/go
+      dockerfile: Dockerfile
+    image: heliandro/poc-docker-go-api:dev
+    container_name: poc-docker-go-api
+    hostname: go-api
+    # entrypoint: dockerize --wait tcp://mysql-db:3306 --timeout 20s go run main.go
+    tty: true
+    restart: always
+    ports:
+      - 8080:8080
     networks:
       - app-network
     depends_on:
